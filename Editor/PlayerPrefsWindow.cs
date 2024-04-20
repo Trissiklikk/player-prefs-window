@@ -216,6 +216,7 @@ namespace Trissiklikk.EditorTools
             GetAllPlayerPrefKeys();
             GetKeyValue(ref m_projectKeys, ref m_projectPlayerPrefsHolder);
             GetKeyValue(ref m_unityKeys, ref m_unityPlayerPrefsHolder);
+            GUI.FocusControl(null);
         }
 
         /// <summary>
