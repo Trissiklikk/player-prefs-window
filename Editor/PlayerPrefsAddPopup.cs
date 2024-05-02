@@ -30,35 +30,25 @@ namespace Trissiklikk.EditorTools
         {
             GUILayout.Space(10);
 
-            GUILayout.BeginHorizontal();
-            try
+            using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.LabelField("Player Prefs Type");
                 GUILayout.FlexibleSpace();
                 m_currentPlayerPrefType = (PlayerPrefType)EditorGUILayout.EnumPopup(m_currentPlayerPrefType);
             }
-            finally
-            {
-                GUILayout.EndHorizontal();
-            }
 
             GUILayout.Space(5);
 
-            GUILayout.BeginHorizontal();
-            try
+            using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.LabelField("Key : ");
                 m_keyValue = EditorGUILayout.TextField(m_keyValue);
             }
-            finally
-            {
-                GUILayout.EndHorizontal();
-            }
+           
 
             GUILayout.Space(2.5f);
 
-            GUILayout.BeginHorizontal();
-            try
+            using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.LabelField("Value : ");
                 switch (m_currentPlayerPrefType)
@@ -76,15 +66,10 @@ namespace Trissiklikk.EditorTools
                         break;
                 }
             }
-            finally
-            {
-                GUILayout.EndHorizontal();
-            }
 
             GUILayout.Space(4f);
 
-            GUILayout.BeginHorizontal();
-            try
+            using (new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.FlexibleSpace();
 
@@ -105,10 +90,6 @@ namespace Trissiklikk.EditorTools
                     GUI.FocusControl(null);
                     ResetData();
                 }
-            }
-            finally
-            {
-                GUILayout.EndHorizontal();
             }
         }
 
