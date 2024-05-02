@@ -44,7 +44,6 @@ namespace Trissiklikk.EditorTools
                 EditorGUILayout.LabelField("Key : ");
                 m_keyValue = EditorGUILayout.TextField(m_keyValue);
             }
-           
 
             GUILayout.Space(2.5f);
 
