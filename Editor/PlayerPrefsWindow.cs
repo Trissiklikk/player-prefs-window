@@ -9,17 +9,20 @@ namespace Trissiklikk.EditorTools
     public sealed class PlayerPrefsWindow : EditorWindow
     {
         private const string REG_KEY_PATH_PATTERN = @"Software\Unity\UnityEditor\{0}\{1}";
-        private const string ERROR_STRING_KEY_MSG = "ERROR_STRING_KEY";
-        private const int ERROR_INT_KEY_MSG = int.MinValue;
-        private const float ERROR_FLOAT_KEY_MSG = float.NaN;
+        private const string REG_KEY_PATH_EDITOR_PATTERN = @"Software\Unity Technologies\Unity Editor 5.x"; // Should handle different versions of Unity Editor for ready Unity 6.x.
 
         private List<string> m_projectKeys = new List<string>();
         private List<string> m_unityKeys = new List<string>();
-        private List<PlayerPrefHolder> m_projectPlayerPrefsHolder = new List<PlayerPrefHolder>();
-        private List<PlayerPrefHolder> m_unityPlayerPrefsHolder = new List<PlayerPrefHolder>();
+        private List<string> m_editorKeys = new List<string>();
+        private List<PrefHolder> m_playerPrefsHolder = new List<PrefHolder>();
+        private List<PrefHolder> m_unityPlayerPrefsHolder = new List<PrefHolder>();
+        private List<PrefHolder> m_editorPrefsHolder = new List<PrefHolder>();
         private bool m_foldoutProjectData = true;
         private bool m_foldoutUnityData = false;
+        private bool m_foldoutEditorData = false;
+        private Vector2 m_scrollPosition = Vector2.zero;
         private PlayerPrefsSaveHandle m_playerPrefsSaveHandle;
+        private EditorPrefsSaveHandle m_editorPrefsSaveHandle;
         private PlayerPrefsElementUtility m_elementUtility;
 
         [MenuItem("Window/Trissiklikk Editor Tools/PlayerPrefs Window %#F1")]
@@ -32,6 +35,7 @@ namespace Trissiklikk.EditorTools
         {
             m_elementUtility = new PlayerPrefsElementUtility();
             m_playerPrefsSaveHandle = new PlayerPrefsSaveHandle();
+            m_editorPrefsSaveHandle = new EditorPrefsSaveHandle();
 
             PlayerPrefsAddPopup.OnCompleteAddData += RefreshPlayerPrefs;
 
@@ -46,127 +50,128 @@ namespace Trissiklikk.EditorTools
         private void OnGUI()
         {
             GUILayout.Space(10);
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button("Add"))
+            using (new GUILayout.HorizontalScope())
             {
-                PlayerPrefsAddPopup.ShowWindow();
-            }
+                GUILayout.FlexibleSpace();
 
-            if(GUILayout.Button("Refresh"))
-            {
-                RefreshPlayerPrefs();
-            }
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginScrollView(Vector2.zero, false, false, GUILayout.Width(position.width), GUILayout.Height(position.height));
-
-            m_foldoutUnityData = EditorGUILayout.Foldout(m_foldoutUnityData, "Unity PlayerPrefs", EditorStyles.foldout);
-
-            if (m_foldoutUnityData)
-            {
-                EditorGUI.indentLevel++;
-
-                for (int i = 0; i < m_unityPlayerPrefsHolder.Count; i++)
+                if (GUILayout.Button("Add"))
                 {
-                    PlayerPrefHolder data = m_unityPlayerPrefsHolder[i];
+                    PlayerPrefsAddPopup.ShowWindow();
+                }
 
-                    switch (data.Type)
+                if (GUILayout.Button("Refresh"))
+                {
+                    RefreshPlayerPrefs();
+                }
+            }
+
+            using (EditorGUILayout.ScrollViewScope scrollView = new EditorGUILayout.ScrollViewScope(m_scrollPosition, false, true, GUILayout.Height(position.height)))
+            {
+                m_scrollPosition = scrollView.scrollPosition;
+
+                #region Unity PlayerPrefs
+
+                m_foldoutUnityData = EditorGUILayout.Foldout(m_foldoutUnityData, "Unity PlayerPrefs", EditorStyles.foldout);
+
+                if (m_foldoutUnityData)
+                {
+                    EditorGUI.indentLevel++;
+
+                    for (int i = 0; i < m_unityPlayerPrefsHolder.Count; i++)
                     {
-                        case PlayerPrefType.String:
-                            m_elementUtility.KeyDataField(data.Key, data.Type, data.StringValue);
-                            continue;
+                        PrefHolder data = m_unityPlayerPrefsHolder[i];
 
-                        case PlayerPrefType.Int:
-                            m_elementUtility.KeyDataField(data.Key, data.Type, data.IntValue.ToString());
-                            continue;
+                        switch (data.Type)
+                        {
+                            case PlayerPrefType.String:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.StringValue);
+                                continue;
 
-                        case PlayerPrefType.Float:
-                            m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString());
-                            continue;
+                            case PlayerPrefType.Int:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.IntValue.ToString());
+                                continue;
+
+                            case PlayerPrefType.Float:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString());
+                                continue;
+                        }
                     }
+
+                    EditorGUI.indentLevel--;
                 }
 
-                EditorGUI.indentLevel--;
-            }
+                #endregion
 
-            EditorGUILayout.Space();
+                EditorGUILayout.Space();
 
-            m_foldoutProjectData = EditorGUILayout.Foldout(m_foldoutProjectData, "Project PlayerPrefs", EditorStyles.foldout);
+                #region Editor Prefs
 
-            if (m_foldoutProjectData)
-            {
-                EditorGUI.indentLevel++;
+                m_foldoutEditorData = EditorGUILayout.Foldout(m_foldoutEditorData, "Editor Prefs", EditorStyles.foldout);
 
-                for (int i = 0; i < m_projectPlayerPrefsHolder.Count; i++)
+                if (m_foldoutEditorData)
                 {
-                    PlayerPrefHolder data = m_projectPlayerPrefsHolder[i];
+                    EditorGUI.indentLevel++;
 
-                    switch (data.Type)
+                    for (int i = 0; i < m_editorPrefsHolder.Count; i++)
                     {
-                        case PlayerPrefType.String:
-                            m_elementUtility.KeyDataField(data.Key, data.Type, data.StringValue, RemovePlayerPrefs);
-                            continue;
+                        PrefHolder data = m_editorPrefsHolder[i];
 
-                        case PlayerPrefType.Int:
-                            m_elementUtility.KeyDataField(data.Key, data.Type, data.IntValue.ToString(), RemovePlayerPrefs);
-                            continue;
+                        switch (data.Type)
+                        {
+                            case PlayerPrefType.String:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.StringValue, RemovePlayerPrefs);
+                                continue;
 
-                        case PlayerPrefType.Float:
-                            m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString(), RemovePlayerPrefs);
-                            continue;
+                            case PlayerPrefType.Int:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.IntValue.ToString(), RemovePlayerPrefs);
+                                continue;
+
+                            case PlayerPrefType.Float:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString(), RemovePlayerPrefs);
+                                continue;
+                        }
                     }
+
+                    EditorGUI.indentLevel--;
                 }
 
-                EditorGUI.indentLevel--;
-            }
+                #endregion
 
-            GUILayout.EndScrollView();
-        }
+                EditorGUILayout.Space();
 
-        /// <summary>
-        /// Method for getting value from player prefs key.
-        /// </summary>
-        private void GetKeyValue(ref List<string> keys, ref List<PlayerPrefHolder> containList)
-        {
-            for (int i = 0; i < keys.Count; i++)
-            {
-                if (!PlayerPrefs.HasKey(keys[i]))
+                #region Project Prefs
+
+                m_foldoutProjectData = EditorGUILayout.Foldout(m_foldoutProjectData, "Project PlayerPrefs", EditorStyles.foldout);
+
+                if (m_foldoutProjectData)
                 {
-                    continue;
+                    EditorGUI.indentLevel++;
+
+                    for (int i = 0; i < m_playerPrefsHolder.Count; i++)
+                    {
+                        PrefHolder data = m_playerPrefsHolder[i];
+
+                        switch (data.Type)
+                        {
+                            case PlayerPrefType.String:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.StringValue, RemovePlayerPrefs);
+                                continue;
+
+                            case PlayerPrefType.Int:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.IntValue.ToString(), RemovePlayerPrefs);
+                                continue;
+
+                            case PlayerPrefType.Float:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString(), RemovePlayerPrefs);
+                                continue;
+                        }
+                    }
+
+                    EditorGUI.indentLevel--;
                 }
 
-                string stringValue = PlayerPrefs.GetString(keys[i], ERROR_STRING_KEY_MSG);
-
-                if (stringValue != ERROR_STRING_KEY_MSG)
-                {
-                    PlayerPrefHolder playerPrefHolder = new PlayerPrefHolder(keys[i]).WithStringValue(stringValue);
-                    containList.Add(playerPrefHolder);
-
-                    continue;
-                }
-
-                int intValue = PlayerPrefs.GetInt(keys[i], ERROR_INT_KEY_MSG);
-
-                if (intValue != ERROR_INT_KEY_MSG)
-                {
-                    PlayerPrefHolder playerPrefHolder = new PlayerPrefHolder(keys[i]).WithIntValue(intValue);
-                    containList.Add(playerPrefHolder);
-
-                    continue;
-                }
-
-                float floatValue = PlayerPrefs.GetFloat(keys[i], ERROR_FLOAT_KEY_MSG);
-
-                if (floatValue != ERROR_FLOAT_KEY_MSG)
-                {
-                    PlayerPrefHolder playerPrefHolder = new PlayerPrefHolder(keys[i]).WithFloatValue(floatValue);
-                    containList.Add(playerPrefHolder);
-
-                    continue;
-                }
+                #endregion
             }
         }
 
@@ -203,19 +208,41 @@ namespace Trissiklikk.EditorTools
         }
 
         /// <summary>
+        /// Get all editor pref keys in registry.
+        /// </summary>
+        private void GetAllEditorPrefKeys()
+        {
+            string regKeyPath = string.Format(REG_KEY_PATH_EDITOR_PATTERN, PlayerSettings.companyName, PlayerSettings.productName);
+            RegistryKey regKey = Registry.CurrentUser.OpenSubKey(regKeyPath);
+
+            if (regKey == null)
+            {
+                return;
+            }
+
+            string[] keys = regKey.GetValueNames();
+
+            m_editorKeys = new List<string>(keys);
+        }
+
+        /// <summary>
         /// Refresh player prefs data.
         /// </summary>
         private void RefreshPlayerPrefs()
         {
             m_projectKeys = new List<string>();
             m_unityKeys = new List<string>();
+            m_editorKeys = new List<string>();
 
-            m_projectPlayerPrefsHolder = new List<PlayerPrefHolder>();
-            m_unityPlayerPrefsHolder = new List<PlayerPrefHolder>();
+            m_playerPrefsHolder = new List<PrefHolder>();
+            m_unityPlayerPrefsHolder = new List<PrefHolder>();
+            m_editorPrefsHolder = new List<PrefHolder>();
 
             GetAllPlayerPrefKeys();
-            GetKeyValue(ref m_projectKeys, ref m_projectPlayerPrefsHolder);
-            GetKeyValue(ref m_unityKeys, ref m_unityPlayerPrefsHolder);
+            GetAllEditorPrefKeys();
+            m_playerPrefsSaveHandle.GetValue(ref m_projectKeys, ref m_playerPrefsHolder);
+            m_playerPrefsSaveHandle.GetValue(ref m_unityKeys, ref m_unityPlayerPrefsHolder);
+            //m_editorPrefsSaveHandle.GetValue(ref m_editorKeys, ref m_editorPrefsHolder);
             GUI.FocusControl(null);
         }
 
@@ -225,9 +252,9 @@ namespace Trissiklikk.EditorTools
         /// <param name="key"></param>
         private void RemovePlayerPrefs(string key)
         {
-            if(EditorUtility.DisplayDialog("Warning", "Are you sure you want to delete this key?", "Yes", "No"))
+            if (EditorUtility.DisplayDialog("Warning", "Are you sure you want to delete this key?", "Yes", "No"))
             {
-                m_playerPrefsSaveHandle.RemovePlayerPrefs(key);
+                m_playerPrefsSaveHandle.Remove(key);
                 RefreshPlayerPrefs();
             }
         }

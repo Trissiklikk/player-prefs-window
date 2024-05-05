@@ -2,7 +2,7 @@
 
 namespace Trissiklikk.EditorTools
 {
-    public sealed class PlayerPrefHolder
+    public sealed class PrefHolder
     {
         public string Key { get; private set; }
         public PlayerPrefType Type { get; private set; }
@@ -10,26 +10,26 @@ namespace Trissiklikk.EditorTools
         public int IntValue { get; private set; }
         public float FloatValue { get; private set; }
 
-        public PlayerPrefHolder(string key)
+        public PrefHolder(string key)
         {
             Key = key;
         }
 
-        public PlayerPrefHolder WithStringValue(string value)
+        public PrefHolder WithStringValue(string value)
         {
             Type = PlayerPrefType.String;
             StringValue = value;
             return this;
         }
 
-        public PlayerPrefHolder WithIntValue(int value)
+        public PrefHolder WithIntValue(int value)
         {
             Type = PlayerPrefType.Int;
             IntValue = value;
             return this;
         }
 
-        public PlayerPrefHolder WithFloatValue(float value)
+        public PrefHolder WithFloatValue(float value)
         {
             Type = PlayerPrefType.Float;
             FloatValue = value;

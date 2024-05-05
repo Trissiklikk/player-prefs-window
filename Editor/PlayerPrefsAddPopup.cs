@@ -99,15 +99,15 @@ namespace Trissiklikk.EditorTools
                 switch (m_currentPlayerPrefType)
                 {
                     case PlayerPrefType.String:
-                        m_playerPrefsSaveHandle.SavePlayerPrefs(m_keyValue, m_stringValue);
+                        m_playerPrefsSaveHandle.SaveString(m_keyValue, m_stringValue);
                         break;
 
                     case PlayerPrefType.Int:
-                        m_playerPrefsSaveHandle.SavePlayerPrefs(m_keyValue, m_intValue);
+                        m_playerPrefsSaveHandle.SaveInt(m_keyValue, m_intValue);
                         break;
 
                     case PlayerPrefType.Float:
-                        m_playerPrefsSaveHandle.SavePlayerPrefs(m_keyValue, m_floatValue);
+                        m_playerPrefsSaveHandle.SaveFloat(m_keyValue, m_floatValue);
                         break;
                 }
             }

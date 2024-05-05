@@ -1,44 +1,42 @@
 ﻿#if UNITY_EDITOR_WIN
+
 using System.Collections.Generic;
-using UnityEngine;
+using UnityEditor;
 
 namespace Trissiklikk.EditorTools
 {
-    public sealed class PlayerPrefsSaveHandle : BaseSaveHandle
+    public sealed class EditorPrefsSaveHandle : BaseSaveHandle
     {
         public override void SaveString(string key, string value)
         {
-            PlayerPrefs.SetString(key, value);
+            EditorPrefs.SetString(key, value);
         }
 
         public override void SaveInt(string key, int value)
         {
-            PlayerPrefs.SetInt(key, value);
+            EditorPrefs.SetInt(key, value);
         }
 
         public override void SaveFloat(string key, float value)
         {
-            PlayerPrefs.SetFloat(key, value);
+            EditorPrefs.SetFloat(key, value);
         }
 
         public override void Remove(string key)
         {
-            PlayerPrefs.DeleteKey(key);
+            EditorPrefs.DeleteKey(key);
         }
-       
-        /// <summary>
-        /// Method for getting value from player prefs key.
-        /// </summary>
+
         public override void GetValue(ref List<string> keys, ref List<PrefHolder> containList)
         {
             for (int i = 0; i < keys.Count; i++)
             {
-                if (!PlayerPrefs.HasKey(keys[i]))
+                if (!EditorPrefs.HasKey(keys[i]))
                 {
                     continue;
                 }
 
-                string stringValue = PlayerPrefs.GetString(keys[i], ERROR_STRING_KEY_MSG);
+                string stringValue = EditorPrefs.GetString(keys[i], ERROR_STRING_KEY_MSG);
 
                 if (stringValue != ERROR_STRING_KEY_MSG)
                 {
@@ -48,7 +46,7 @@ namespace Trissiklikk.EditorTools
                     continue;
                 }
 
-                int intValue = PlayerPrefs.GetInt(keys[i], ERROR_INT_KEY_MSG);
+                int intValue = EditorPrefs.GetInt(keys[i], ERROR_INT_KEY_MSG);
 
                 if (intValue != ERROR_INT_KEY_MSG)
                 {
@@ -58,7 +56,7 @@ namespace Trissiklikk.EditorTools
                     continue;
                 }
 
-                float floatValue = PlayerPrefs.GetFloat(keys[i], ERROR_FLOAT_KEY_MSG);
+                float floatValue = EditorPrefs.GetFloat(keys[i], ERROR_FLOAT_KEY_MSG);
 
                 if (floatValue != ERROR_FLOAT_KEY_MSG)
                 {
