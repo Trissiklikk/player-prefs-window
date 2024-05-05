@@ -2,11 +2,13 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Trissiklikk.EditorTools
 {
     public sealed class PlayerPrefsElementUtility
     {
+        private const float MAX_WIDTH_PRECENT = 40;
         /// <summary>
         /// This for create a data field for key and value.
         /// </summary>
@@ -38,27 +40,30 @@ namespace Trissiklikk.EditorTools
             GUIStyle lableStyled = new GUIStyle(GUI.skin.horizontalScrollbar);
             lableStyled.margin = new RectOffset(2, 2, 5, 5);
 
-            EditorGUILayout.BeginHorizontal(lableStyled);
-            EditorGUILayout.LabelField(key, lableStyle);
-
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.EnumPopup(type, enumOptions);
-            EditorGUI.EndDisabledGroup();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.TextArea(value, textAreaOptions);
-
-            if(onRemoveAction != null)
+            using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("x"))
+                if (onRemoveAction != null)
                 {
-                    onRemoveAction.Invoke(key);
+                    if (GUILayout.Button("x"))
+                    {
+                        onRemoveAction.Invoke(key);
+                    }
                 }
+
+                float width = EditorGUIUtility.currentViewWidth;
+                EditorGUILayout.LabelField(key, lableStyle, GUILayout.Width((MAX_WIDTH_PRECENT / 100) * width));
+                GUILayout.FlexibleSpace();
+
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.EnumPopup(type, enumOptions);
+                EditorGUI.EndDisabledGroup();
+
+                EditorGUILayout.TextArea(value, textAreaOptions);
+
+                EditorGUILayout.Space();
             }
 
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space();
+            EditorGUILayout.Space(5);
         }
     }
 }

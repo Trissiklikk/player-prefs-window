@@ -11,19 +11,20 @@ namespace Trissiklikk.EditorTools
         private const string REG_KEY_PATH_PATTERN = @"Software\Unity\UnityEditor\{0}\{1}";
         private const string REG_KEY_PATH_EDITOR_PATTERN = @"Software\Unity Technologies\Unity Editor 5.x"; // Should handle different versions of Unity Editor for ready Unity 6.x.
 
+        private bool m_foldoutProjectData = true;
+        private bool m_foldoutUnityData = false;
+        private bool m_foldoutEditorData = false;
+        private int m_currentTab = 0;
+        private Vector2 m_scrollPosition = Vector2.zero;
+        private PlayerPrefsSaveHandle m_playerPrefsSaveHandle;
+        private EditorPrefsSaveHandle m_editorPrefsSaveHandle;
+        private PlayerPrefsElementUtility m_elementUtility;
         private List<string> m_projectKeys = new List<string>();
         private List<string> m_unityKeys = new List<string>();
         private List<string> m_editorKeys = new List<string>();
         private List<PrefHolder> m_playerPrefsHolder = new List<PrefHolder>();
         private List<PrefHolder> m_unityPlayerPrefsHolder = new List<PrefHolder>();
         private List<PrefHolder> m_editorPrefsHolder = new List<PrefHolder>();
-        private bool m_foldoutProjectData = true;
-        private bool m_foldoutUnityData = false;
-        private bool m_foldoutEditorData = false;
-        private Vector2 m_scrollPosition = Vector2.zero;
-        private PlayerPrefsSaveHandle m_playerPrefsSaveHandle;
-        private EditorPrefsSaveHandle m_editorPrefsSaveHandle;
-        private PlayerPrefsElementUtility m_elementUtility;
 
         [MenuItem("Window/Trissiklikk Editor Tools/PlayerPrefs Window %#F1")]
         public static void ShowWindow()
@@ -51,6 +52,28 @@ namespace Trissiklikk.EditorTools
         {
             GUILayout.Space(10);
 
+            int tab = GUILayout.Toolbar(m_currentTab, new string[] { "Player Prefs", "Editor Prefs" });
+
+            GUILayout.Space(10);
+
+            m_currentTab = tab;
+
+            switch (m_currentTab)
+            {
+                case 0:
+                    DrawPlayerPrefsContent();
+                    break;
+                case 1:
+                    DrawEdiorPrefsContent();
+                    break;
+                default:
+                    throw new System.ArgumentNullException();
+            }
+
+        }
+
+        private void DrawPlayerPrefsContent()
+        {
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.FlexibleSpace();
@@ -66,7 +89,9 @@ namespace Trissiklikk.EditorTools
                 }
             }
 
-            using (EditorGUILayout.ScrollViewScope scrollView = new EditorGUILayout.ScrollViewScope(m_scrollPosition, false, true, GUILayout.Height(position.height)))
+            GUILayout.Space(10);
+
+            using (EditorGUILayout.ScrollViewScope scrollView = new EditorGUILayout.ScrollViewScope(m_scrollPosition, true, true, GUILayout.Height(position.height), GUILayout.Width(position.width)))
             {
                 m_scrollPosition = scrollView.scrollPosition;
 
@@ -94,41 +119,6 @@ namespace Trissiklikk.EditorTools
 
                             case PlayerPrefType.Float:
                                 m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString());
-                                continue;
-                        }
-                    }
-
-                    EditorGUI.indentLevel--;
-                }
-
-                #endregion
-
-                EditorGUILayout.Space();
-
-                #region Editor Prefs
-
-                m_foldoutEditorData = EditorGUILayout.Foldout(m_foldoutEditorData, "Editor Prefs", EditorStyles.foldout);
-
-                if (m_foldoutEditorData)
-                {
-                    EditorGUI.indentLevel++;
-
-                    for (int i = 0; i < m_editorPrefsHolder.Count; i++)
-                    {
-                        PrefHolder data = m_editorPrefsHolder[i];
-
-                        switch (data.Type)
-                        {
-                            case PlayerPrefType.String:
-                                m_elementUtility.KeyDataField(data.Key, data.Type, data.StringValue, RemovePlayerPrefs);
-                                continue;
-
-                            case PlayerPrefType.Int:
-                                m_elementUtility.KeyDataField(data.Key, data.Type, data.IntValue.ToString(), RemovePlayerPrefs);
-                                continue;
-
-                            case PlayerPrefType.Float:
-                                m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString(), RemovePlayerPrefs);
                                 continue;
                         }
                     }
@@ -173,6 +163,46 @@ namespace Trissiklikk.EditorTools
 
                 #endregion
             }
+        }
+
+        private void DrawEdiorPrefsContent()
+        {
+
+            m_foldoutEditorData = EditorGUILayout.Foldout(m_foldoutEditorData, "Editor Prefs", EditorStyles.foldout);
+
+            using (EditorGUILayout.ScrollViewScope scrollView = new EditorGUILayout.ScrollViewScope(m_scrollPosition, true, true, GUILayout.Height(position.height), GUILayout.Width(position.width)))
+            {
+                m_scrollPosition = scrollView.scrollPosition;
+
+                if (m_foldoutEditorData)
+                {
+                    EditorGUI.indentLevel++;
+
+                    for (int i = 0; i < m_editorPrefsHolder.Count; i++)
+                    {
+                        PrefHolder data = m_editorPrefsHolder[i];
+
+                        switch (data.Type)
+                        {
+                            case PlayerPrefType.String:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.StringValue);
+                                continue;
+
+                            case PlayerPrefType.Int:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.IntValue.ToString());
+                                continue;
+
+                            case PlayerPrefType.Float:
+                                m_elementUtility.KeyDataField(data.Key, data.Type, data.FloatValue.ToString());
+                                continue;
+                        }
+                    }
+
+                    EditorGUI.indentLevel--;
+                }
+            }
+
+            EditorGUILayout.Space();
         }
 
         /// <summary>
@@ -242,7 +272,7 @@ namespace Trissiklikk.EditorTools
             GetAllEditorPrefKeys();
             m_playerPrefsSaveHandle.GetValue(ref m_projectKeys, ref m_playerPrefsHolder);
             m_playerPrefsSaveHandle.GetValue(ref m_unityKeys, ref m_unityPlayerPrefsHolder);
-            //m_editorPrefsSaveHandle.GetValue(ref m_editorKeys, ref m_editorPrefsHolder);
+            m_editorPrefsSaveHandle.GetValue(ref m_editorKeys, ref m_editorPrefsHolder);
             GUI.FocusControl(null);
         }
 

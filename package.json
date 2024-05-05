@@ -1,6 +1,6 @@
 {
   "name": "com.trissiklikk.player-prefs-unity-window-package",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Player-prefs window",
   "description": "The gui window for unity editor for view, get or remove your player-prefs data that you used in your project.",
   "unity": "2022.3",
